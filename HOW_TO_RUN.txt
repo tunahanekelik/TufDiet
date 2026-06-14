@@ -1,0 +1,50 @@
+==================================================
+TUFDIET - EXAMINER / PROFESSOR RUN INSTRUCTIONS
+==================================================
+Prepared by: Tunahan Ekelik
+
+Dear Professor,
+To fully test the TufDiet application locally on your machine, you need to run both the Django Backend (which handles the AI and USDA Math Scaling) and the Flutter Mobile App.
+
+--------------------------------------------------
+PART 1: RUNNING THE BACKEND (PYTHON / DJANGO)
+--------------------------------------------------
+1. Open a terminal and navigate to the backend folder:
+   cd TufDiet-main
+
+2. (Optional but recommended) Create a virtual environment:
+   python -m venv venv
+   Windows: venv\Scripts\activate
+   Mac/Linux: source venv/bin/activate
+
+3. Install the required Python libraries:
+   pip install django djangorestframework google-generativeai requests
+
+4. Run the local server:
+   python manage.py runserver
+
+   *The backend will now be running on http://127.0.0.1:8000. Keep this terminal open.*
+
+--------------------------------------------------
+PART 2: RUNNING THE MOBILE APP (FLUTTER)
+--------------------------------------------------
+1. Open a NEW terminal and navigate to the mobile app folder:
+   cd TufDietMobileApp
+
+2. Fetch all required Flutter packages (Provider, sqflite, http, etc.):
+   flutter pub get
+
+3. Launch an Android/iOS emulator or connect a physical device.
+
+4. Run the application:
+   flutter run
+
+--------------------------------------------------
+THINGS TO TEST (HIGHLIGHTS OF THE PROJECT):
+--------------------------------------------------
+- Try turning off your emulator's Wi-Fi (Airplane mode) and reopening the app to see the SQLite offline caching in action!
+- Click the middle Camera icon to test the Generative AI Meal Scanner.
+- Click the Chat icon to talk to the context-aware AI Dietitian.
+- Go to the Diet Plan tab and click "Regenerate" to see the custom USDA-scaled algorithm generate a personalized plan based on the profile's TDEE.
+
+Thank you for reviewing my project!

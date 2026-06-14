@@ -1,0 +1,25 @@
+# Python / Django
+__pycache__/
+*.pyc
+venv/
+env/
+.env
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.pub-cache/
+.pub/
+*.log
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Videos and temp docs
+*.mp4
+~$*.docx

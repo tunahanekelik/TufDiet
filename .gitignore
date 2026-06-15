@@ -23,3 +23,11 @@ build/
 # Videos and temp docs
 *.mp4
 ~$*.docx
+*.pdf
+*.docx
+
+# Project Folders
+Graphs/
+Presentation/
+Reports/
+Yemekler/

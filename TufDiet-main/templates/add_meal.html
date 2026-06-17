@@ -1,0 +1,344 @@
+{% extends 'base.html' %} {% block title %}Add Meal - TufDiet{% endblock %}
+{%block content %}
+<div class="container my-4">
+  <h2 class="mb-4">Add New Meal</h2>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          {% if messages %} {% for message in messages %}
+          <div class="alert alert-success">{{ message }}</div>
+          {% endfor %} {% endif %}
+
+          <form method="post" enctype="multipart/form-data" id="mealForm">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label">Food Photo</label>
+              <input
+                type="file"
+                name="image"
+                class="form-control"
+                id="imageInput"
+                accept="image/*"
+              />
+              <small class="text-muted"
+                >Optional: Upload photo to analyze with AI</small
+              >
+            </div>
+
+            <div
+              id="imagePreview"
+              class="text-center mb-3"
+              style="display: none"
+            >
+              <img
+                id="previewImg"
+                src=""
+                class="img-thumbnail"
+                style="max-height: 200px"
+              />
+              <div id="analyzingStatus" class="mt-2"></div>
+              <div id="aiPredictions" class="mt-2"></div>
+              <div
+                id="aiComponentsList"
+                class="mt-3 text-start mx-auto"
+                style="max-width: 500px"
+              ></div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Food Name</label>
+              <input
+                type="text"
+                name="food_name"
+                class="form-control"
+                id="foodName"
+                placeholder="Type or select food..."
+                required
+              />
+              <small class="text-muted" id="nutritionHint"></small>
+            </div>
+
+            <hr />
+            <h5>Nutrition Info</h5>
+
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Calories (kcal)</label>
+                <input
+                  type="number"
+                  name="calories"
+                  class="form-control"
+                  id="calories"
+                  value="0"
+                  step="1"
+                  required
+                />
+              </div>
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Protein (g)</label>
+                <input
+                  type="number"
+                  name="protein"
+                  class="form-control"
+                  id="protein"
+                  value="0"
+                  step="1"
+                  required
+                />
+              </div>
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Carbs (g)</label>
+                <input
+                  type="number"
+                  name="carbs"
+                  class="form-control"
+                  id="carbs"
+                  value="0"
+                  step="1"
+                  required
+                />
+              </div>
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Fat (g)</label>
+                <input
+                  type="number"
+                  name="fat"
+                  class="form-control"
+                  id="fat"
+                  value="0"
+                  step="1"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg w-100">
+              Save Meal
+            </button>
+            <button type="button" id="fixWithAiBtn" class="btn btn-warning btn-lg w-100 mt-2 text-dark fw-bold" style="display: none;">
+              ✨ Fix with AI (Deep Re-Analyze)
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card bg-light">
+        <div class="card-body">
+          <h5><i class="bi bi-lightbulb"></i> How it works</h5>
+          <ul class="small">
+            <li>Upload photo - AI suggests food</li>
+            <li>Or type food name - system learns</li>
+            <li>Adjust values if needed</li>
+            <li>Save - system remembers</li>
+          </ul>
+          <hr />
+          <h6>Quick Reference:</h6>
+          <ul class="small">
+            <li>Rice: 130 kcal/100g</li>
+            <li>Chicken: 165 kcal/100g</li>
+            <li>Egg: 78 kcal</li>
+            <li>Bread: 80 kcal/slice</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document
+    .getElementById("imageInput")
+    .addEventListener("change", async function (e) {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          document.getElementById("previewImg").src = ev.target.result;
+          document.getElementById("imagePreview").style.display = "block";
+          document.getElementById("analyzingStatus").innerHTML =
+            '<span class="text-info">Analyzing with AI...</span>';
+          document.getElementById("aiPredictions").innerHTML = "";
+          document.getElementById("aiComponentsList").innerHTML = "";
+        };
+        reader.onerror = function () {
+          document.getElementById("analyzingStatus").innerHTML =
+            '<span class="text-danger">Error reading file</span>';
+        };
+        reader.readAsDataURL(file);
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+          const response = await fetch("/api/ai-analyze/", {
+            method: "POST",
+            headers: {
+              "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: formData,
+          });
+
+          const data = await response.json();
+          
+          document.getElementById("fixWithAiBtn").style.display = "block";
+
+          if (data.success) {
+            document.getElementById("analyzingStatus").innerHTML =
+              '<span class="text-success">✓ AI Analysis Complete</span>';
+            document.getElementById("foodName").value = data.food_name;
+            document.getElementById("calories").value = Math.round(
+              data.calories,
+            );
+            document.getElementById("protein").value = Math.round(data.protein);
+            document.getElementById("carbs").value = Math.round(data.carbs);
+            document.getElementById("fat").value = Math.round(data.fat);
+
+            const componentsContainer =
+              document.getElementById("aiComponentsList");
+            componentsContainer.innerHTML =
+              '<h6 class="mb-2 mt-3 pb-2 border-bottom text-muted fw-bold">🍽️ Plate Breakdown:</h6>';
+
+            if (data.components && data.components.length > 0) {
+              data.components.forEach((item) => {
+                const componentCard = document.createElement("div");
+                componentCard.className =
+                  "card mb-2 shadow-sm border-secondary bg-dark text-white";
+                componentCard.innerHTML = `
+                    <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1 text-success fw-bold" style="font-size: 16px; letter-spacing: 0.5px;">${item.name}</h5>
+                            <small class="text-muted fw-semibold" style="font-size: 12px;">Amount: ${item.amount}</small>
+                        </div>
+                        <div class="text-end d-flex flex-column align-items-end gap-2">
+                            <span class="badge bg-success px-3 py-1" style="font-size: 13px; font-weight: 700; border-radius: 6px;">${Math.round(item.calories)} kcal</span>
+                            <div class="d-flex gap-1" style="font-size: 12px; font-weight: 600;">
+                                <span class="badge bg-danger px-2 py-1" style="min-width: 50px; border-radius: 4px;">P: ${Math.round(item.protein)}g</span>
+                                <span class="badge bg-primary px-2 py-1" style="min-width: 50px; border-radius: 4px;">C: ${Math.round(item.carbs)}g</span>
+                                <span class="badge bg-warning text-dark px-2 py-1" style="min-width: 50px; border-radius: 4px;">F: ${Math.round(item.fat)}g</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                componentsContainer.appendChild(componentCard);
+              });
+            }
+          } else {
+            document.getElementById("analyzingStatus").innerHTML =
+              '<span class="text-warning">⚠ AI analysis failed: ' +
+              (data.error || "Try another photo") +
+              "</span>";
+          }
+        } catch (err) {
+          document.getElementById("analyzingStatus").innerHTML =
+            '<span class="text-warning">⚠ Could not analyze - enter values manually</span>';
+        }
+      }
+    });
+
+  document
+    .getElementById("foodName")
+    .addEventListener("input", async function (e) {
+      const name = e.target.value;
+      if (name.length < 2) return;
+
+      try {
+        const response = await fetch(
+          `/get-nutrition/?food_name=${encodeURIComponent(name)}`,
+        );
+        const data = await response.json();
+
+        if (data.found) {
+          document.getElementById("calories").value = Math.round(data.calories);
+          document.getElementById("protein").value = Math.round(data.protein);
+          document.getElementById("carbs").value = Math.round(data.carbs);
+          document.getElementById("fat").value = Math.round(data.fat);
+          document.getElementById("nutritionHint").textContent =
+            `✓ Learned: ${Math.round(data.calories)} kcal (used ${data.usage_count} times)`;
+          document.getElementById("nutritionHint").className = "text-success";
+        } else {
+          document.getElementById("nutritionHint").textContent =
+            "New food - enter values";
+          document.getElementById("nutritionHint").className = "text-muted";
+        }
+      } catch (err) {
+        console.log("Error checking nutrition");
+      }
+    });
+
+  document.getElementById("fixWithAiBtn").addEventListener("click", async function() {
+    const fileInput = document.getElementById("imageInput");
+    if (!fileInput.files || !fileInput.files[0]) return;
+    
+    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    this.disabled = true;
+    
+    document.getElementById("analyzingStatus").innerHTML = '<span class="text-info">✨ Deep Re-Analyzing with AI...</span>';
+    
+    const formData = new FormData();
+    formData.append("image", fileInput.files[0]);
+    formData.append("force_gemini", "true");
+    
+    try {
+      const response = await fetch("/api/ai-analyze/", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      
+      this.innerHTML = '✨ Fix with AI (Deep Re-Analyze)';
+      this.disabled = false;
+
+      if (data.success) {
+        document.getElementById("analyzingStatus").innerHTML = '<span class="text-success">✓ Deep AI Analysis Complete</span>';
+        document.getElementById("foodName").value = data.food_name;
+        document.getElementById("calories").value = Math.round(data.calories);
+        document.getElementById("protein").value = Math.round(data.protein);
+        document.getElementById("carbs").value = Math.round(data.carbs);
+        document.getElementById("fat").value = Math.round(data.fat);
+
+        const componentsContainer = document.getElementById("aiComponentsList");
+        componentsContainer.innerHTML = '<h6 class="mb-2 mt-3 pb-2 border-bottom text-muted fw-bold">🍽️ Deep Plate Breakdown:</h6>';
+
+        if (data.components && data.components.length > 0) {
+          data.components.forEach((item) => {
+            const componentCard = document.createElement("div");
+            componentCard.className = "card mb-2 shadow-sm border-secondary bg-dark text-white";
+            componentCard.innerHTML = `
+                <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 text-success fw-bold" style="font-size: 16px; letter-spacing: 0.5px;">${item.name}</h5>
+                        <small class="text-muted fw-semibold" style="font-size: 12px;">Amount: ${item.amount}</small>
+                    </div>
+                    <div class="text-end d-flex flex-column align-items-end gap-2">
+                        <span class="badge bg-success px-3 py-1" style="font-size: 13px; font-weight: 700; border-radius: 6px;">${Math.round(item.calories)} kcal</span>
+                        <div class="d-flex gap-1" style="font-size: 12px; font-weight: 600;">
+                            <span class="badge bg-danger px-2 py-1" style="min-width: 50px; border-radius: 4px;">P: ${Math.round(item.protein)}g</span>
+                            <span class="badge bg-primary px-2 py-1" style="min-width: 50px; border-radius: 4px;">C: ${Math.round(item.carbs)}g</span>
+                            <span class="badge bg-warning text-dark px-2 py-1" style="min-width: 50px; border-radius: 4px;">F: ${Math.round(item.fat)}g</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            componentsContainer.appendChild(componentCard);
+          });
+        }
+      } else {
+        document.getElementById("analyzingStatus").innerHTML = '<span class="text-warning">⚠ Deep AI analysis failed: ' + (data.error || "Try again") + "</span>";
+      }
+    } catch (err) {
+      this.innerHTML = '✨ Fix with AI (Deep Re-Analyze)';
+      this.disabled = false;
+      document.getElementById("analyzingStatus").innerHTML = '<span class="text-warning">⚠ Could not analyze - enter values manually</span>';
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - TufDiet{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-4 mb-4">AI-Powered Nutrition Tracking</h1>
+        <p class="lead mb-4">Track your meals, analyze calories, and achieve your health goals with AI</p>
+        {% if not user.is_authenticated %}
+            <a href="/register/" class="btn btn-light btn-lg me-2">Get Started</a>
+            <a href="/login/" class="btn btn-outline-light btn-lg">Login</a>
+        {% else %}
+            <a href="/dashboard/" class="btn btn-light btn-lg">Go to Dashboard</a>
+            {% if not has_profile %}
+            <div class="alert alert-warning mt-3">
+                <h5>Complete Your Profile</h5>
+                <p>Set up your health profile to get personalized nutrition targets.</p>
+                <a href="/profile/" class="btn btn-primary btn-sm">Set Up Now</a>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if user.is_authenticated and has_profile and today_stats %}
+<div class="container my-4">
+    <h4 class="mb-3">Today's Progress</h4>
+    <div class="row">
+        <!-- Calories Progress -->
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-primary text-white">
+                <div class="card-body">
+                    <h5>Calories</h5>
+                    <h2>{{ today_stats.calories|floatformat:0 }}</h2>
+                    <small>/ {{ profile.target_calories|floatformat:0 }} kcal</small>
+                    <div class="progress bg-white mt-2" style="height: 8px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ today_stats.cal_progress }}%;"></div>
+                    </div>
+                    <small>{{ today_stats.cal_progress }}%</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Macros -->
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-danger text-white">
+                <div class="card-body">
+                    <h5>Protein</h5>
+                    <h2>{{ today_stats.protein|floatformat:0 }}g</h2>
+                    <small>/ {{ profile.target_protein|floatformat:1 }}g</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-info text-white">
+                <div class="card-body">
+                    <h5>Carbs</h5>
+                    <h2>{{ today_stats.carbs|floatformat:0 }}g</h2>
+                    <small>/ {{ profile.target_carbs|floatformat:1 }}g</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center bg-warning text-dark">
+                <div class="card-body">
+                    <h5>Fat</h5>
+                    <h2>{{ today_stats.fat|floatformat:0 }}g</h2>
+                    <small>/ {{ profile.target_fat|floatformat:1 }}g</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Water Tracker -->
+    <div class="row mt-2">
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">💧 Water Today</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3>{{ profile.water_consumed }} / {{ profile.water_target }}</h3>
+                    <div class="progress mt-2" style="height: 10px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ water_progress }}%;"></div>
+                    </div>
+                    <small>{{ water_progress }}%</small>
+                    <a href="/profile/" class="btn btn-info btn-sm d-block mt-2">Track Water</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- BMI Card -->
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">⚖️ Your BMI</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h3>{{ profile.bmi|default:"-" }}</h3>
+                    <small class="text-muted">Weight: {{ profile.weight }}kg</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Goal Card -->
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">🎯 Your Goal</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% with goal_key=profile.goal %}
+                    <h4>{% if goal_key == 'LOSE_WEIGHT' %}Weight Loss{% elif goal_key == 'GAIN_WEIGHT' %}Weight Gain{% elif goal_key == 'MUSCLE_GAIN' %}Muscle Gain{% elif goal_key == 'FAT_BURN' %}Fat Burn{% else %}Weight Maintenance{% endif %}</h4>
+                    {% endwith %}
+                    <small class="text-muted">Target: {{ profile.target_calories|floatformat:0 }} kcal/day</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="container my-5">
+    <div class="row text-center">
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body">
+                    <i class="bi bi-camera-fill text-success" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Photo Recognition</h5>
+                    <p class="card-text">Take a photo of your meal and our AI will identify and analyze it instantly.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body">
+                    <i class="bi bi-graph-up text-success" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Nutrition Tracking</h5>
+                    <p class="card-text">Track calories, protein, carbs, and fat to meet your daily nutrition goals.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card feature-card h-100">
+                <div class="card-body">
+                    <i class="bi bi-brain text-success" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">AI Analysis</h5>
+                    <p class="card-text">Powered by CNN-based Food-101 model with 83%+ accuracy.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h2 class="mb-4">How It Works</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <span class="badge bg-success rounded-circle p-3">1</span>
+                    </div>
+                    <h5>Take a Photo</h5>
+                    <p>Capture your meal with your camera</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <span class="badge bg-success rounded-circle p-3">2</span>
+                    </div>
+                    <h5>AI Analysis</h5>
+                    <p>Our AI identifies and calculates nutrition</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <span class="badge bg-success rounded-circle p-3">3</span>
+                    </div>
+                    <h5>Track Progress</h5>
+                    <p>Monitor your daily intake and goals</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

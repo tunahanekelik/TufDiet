@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Today's Diet Plan - TufDiet{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- --- building the header rn --- -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-check text-emerald" style="color: var(--emerald);"></i> Today's AI Diet Plan</h2>
+        <button class="btn btn-emerald" style="background: var(--emerald); color: white;" data-bs-toggle="modal" data-bs-target="#generatePlanModal">
+            <i class="bi bi-magic"></i> Regenerate AI Plan
+        </button>
+    </div>
+
+    <!-- --- showing the meals rn --- -->
+    <div class="row">
+        {% if meals %}
+            {% for meal in meals %}
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 shadow-sm border-0" style="background: var(--bg-surface); border: 1px solid var(--border-color) !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title" style="color: var(--emerald);"><i class="bi bi-egg-fried"></i> {{ meal.get_meal_type_display }}</h5>
+                            <span class="badge" style="background: var(--bg-surface-alt); color: var(--text-primary); border: 1px solid var(--border-color);">{{ meal.suggested_time|time:"H:i" }}</span>
+                        </div>
+                        <h6 style="color: var(--text-primary);">{{ meal.food_name }}</h6>
+                        <hr style="border-color: var(--border-color);">
+                        <div class="d-flex justify-content-between small" style="color: var(--text-secondary);">
+                            <span><i class="bi bi-fire text-danger"></i> {{ meal.target_calories|floatformat:0 }} kcal</span>
+                            <span>P: {{ meal.target_protein|floatformat:1 }}g</span>
+                            <span>C: {{ meal.target_carbs|floatformat:1 }}g</span>
+                            <span>F: {{ meal.target_fat|floatformat:1 }}g</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center my-5">
+                <i class="bi bi-calendar-x" style="font-size: 4rem; color: var(--text-muted);"></i>
+                <h4 class="mt-3" style="color: var(--text-muted);">No diet plan generated for today yet.</h4>
+                <p style="color: var(--text-secondary);">Click the regenerate button to get your personalized AI plan.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- --- building the modal rn --- -->
+<!-- popup for the user to customize their diet generation -->
+<div class="modal fade" id="generatePlanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: var(--bg-surface); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                <h5 class="modal-title" style="color: var(--text-primary);"><i class="bi bi-sliders"></i> Customize Your Plan</h5>
+                <button type="button" class="btn-close" style="filter: invert(1);" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label" style="color: var(--text-secondary);">Wake Up Time</label>
+                    <input type="time" id="wakeTime" class="form-control" style="background: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary);" value="08:00">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color: var(--text-secondary);">Sleep Time</label>
+                    <input type="time" id="sleepTime" class="form-control" style="background: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary);" value="23:00">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="color: var(--text-secondary);">Number of Snacks</label>
+                    <input type="number" id="snackCount" class="form-control" style="background: var(--bg-surface-alt); border-color: var(--border-color); color: var(--text-primary);" value="2" min="0" max="4">
+                    <div class="form-text" style="color: var(--text-muted);">How many snacks do you want throughout the day?</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn" id="generateBtn" onclick="generateDietPlan()" style="background: var(--emerald); color: white;">
+                    <i class="bi bi-magic"></i> Generate Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- --- adding the logic for fetching the ai plan rn --- -->
+<script>
+async function generateDietPlan() {
+    const btn = document.getElementById('generateBtn');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+    btn.disabled = true;
+
+    const wakeTime = document.getElementById('wakeTime').value;
+    const sleepTime = document.getElementById('sleepTime').value;
+    const snackCount = document.getElementById('snackCount').value;
+
+    try {
+        const response = await fetch('/api/diet-plans/generate/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // --- explicitly adding the csrf token! django will complain otherwise rn ---
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                wake_time: wakeTime,
+                sleep_time: sleepTime,
+                snack_count: parseInt(snackCount)
+            })
+        });
+
+        if (response.ok) {
+            // successful! refreshing the page to show the chronologically sorted meals rn
+            window.location.reload();
+        } else {
+            const data = await response.json();
+            alert('Failed to generate plan: ' + (data.error || 'Unknown error'));
+            btn.innerHTML = '<i class="bi bi-magic"></i> Generate Now';
+            btn.disabled = false;
+        }
+    } catch (error) {
+        alert('An error occurred. Please try again.');
+        btn.innerHTML = '<i class="bi bi-magic"></i> Generate Now';
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

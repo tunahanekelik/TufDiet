@@ -1,0 +1,694 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Health Hub - TufDiet{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --emerald: #1b9c5e;
+        --emerald-dark: #147a4a;
+        --emerald-glow: rgba(27, 156, 94, 0.3);
+    }
+    body { background: var(--bg-body); color: var(--text-primary); }
+    .card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .card-header {
+        background: var(--bg-surface-alt) !important;
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        color: var(--text-primary) !important;
+    }
+    .card-body { color: var(--text-secondary); }
+    .stat-card { transition: transform 0.3s, box-shadow 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+    .stat-card h3, .stat-card h4, .stat-card h5 { color: var(--text-primary); }
+    .stat-card small { color: var(--text-muted) !important; }
+    .profile-card { background: linear-gradient(135deg, #1b9c5e 0%, #147a4a 100%) !important; }
+    .profile-card .card-body, .profile-card h4, .profile-card p, .profile-card a { color: #fff !important; }
+    .water-glass {
+        width: 36px; height: 46px;
+        border: 2px solid #17a2b8;
+        border-radius: 0 0 10px 10px;
+        display: inline-block; margin: 2px;
+        background: var(--bg-surface-alt);
+    }
+    .water-glass.empty { background: var(--bg-surface); }
+    .nav-tabs { border-bottom: 1px solid var(--border-color); }
+    .nav-tabs .nav-link {
+        border: none; color: var(--text-muted);
+        background: transparent; padding: 10px 20px;
+    }
+    .nav-tabs .nav-link:hover { color: var(--emerald); }
+    .nav-tabs .nav-link.active {
+        border-bottom: 3px solid var(--emerald);
+        color: var(--emerald); font-weight: bold;
+        background: transparent;
+    }
+    .history-row:hover { background: var(--bg-surface-alt); }
+    .table { color: var(--text-secondary); }
+    .table thead th { border-color: var(--border-color); color: var(--text-muted); }
+    .table td { border-color: var(--border-color); }
+    .btn-emerald { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+    .btn-emerald:hover { background: var(--emerald-dark); color: #fff; }
+    .form-control, .form-select {
+        background: var(--bg-surface-alt); border: 1px solid var(--border-color);
+        color: var(--text-primary); border-radius: 8px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--emerald); box-shadow: 0 0 0 0.2rem var(--emerald-glow);
+        background: var(--bg-elevated); color: var(--text-primary);
+    }
+    .alert-warning { background: #2a2510; border-color: #3a3220; color: #e8d8a0; }
+    .alert-info { background: #102a35; border-color: #103a45; color: #a0d8e8; }
+    .alert-danger { background: #2a1015; border-color: #3a2025; color: #e8a0a8; }
+    .progress { background: var(--bg-elevated); }
+    .target-matched { color: var(--emerald); }
+    .target-low { color: #ffc107; }
+    .target-over { color: #dc3545; }
+    input::placeholder, textarea::placeholder { color: var(--text-muted) !important; }
+    .badge { font-weight: 500; }
+    .text-muted { color: var(--text-muted) !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+                <i class="bi bi-person-badge"></i> Overview
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#plan" type="button">
+                <i class="bi bi-graph-up"></i> Plan Update
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button">
+                <i class="bi bi-clock-history"></i> History
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings" type="button">
+                <i class="bi bi-gear"></i> Account
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content">
+        <!-- OVERVIEW TAB -->
+        <div class="tab-pane fade show active" id="overview">
+            <div class="row">
+                <!-- Profile Header -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card stat-card profile-card">
+                        <div class="card-body text-center">
+                            {% if profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid rgba(255,255,255,0.3);">
+                            {% elif profile.profile_photo %}
+                                <img src="{{ profile.profile_photo.url }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid rgba(255,255,255,0.3);">
+                            {% else %}
+                                <div class="rounded-circle bg-white bg-opacity-25 d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                                    <i class="bi bi-person" style="font-size: 3rem;"></i>
+                                </div>
+                            {% endif %}
+                            <h4>{{ user.username }}</h4>
+                            <p class="mb-1">{{ profile.bio|default:"No bio yet" }}</p>
+                            {% if profile.social_link %}
+                                <a href="{{ profile.social_link }}" target="_blank" class="text-white text-decoration-underline"><i class="bi bi-link"></i> Social</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Water Tracker -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-cup-straw text-info"></i> Water Tracker</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="mb-2" id="waterGlasses">
+                                {% for i in "12345678"|make_list %}
+                                    {% if forloop.counter <= profile.water_target %}
+                                        {% if forloop.counter <= profile.water_consumed %}
+                                            <div class="water-glass" style="background: linear-gradient(to top, #17a2b8 100%, transparent 100%);"></div>
+                                        {% else %}
+                                            <div class="water-glass empty"></div>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <h4><span id="waterCount">{{ profile.water_consumed }}</span> / <span id="waterTarget">{{ profile.water_target }}</span></h4>
+                            <small class="text-muted">glasses today (<span id="waterProgress">{{ progress|default:"0" }}</span>%)</small>
+                            <button class="btn btn-emerald btn-sm mt-2" onclick="addWater()">
+                                <i class="bi bi-plus"></i> Add Glass
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Health Metrics -->
+                <div class="col-lg-8">
+                    {% if has_profile %}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card stat-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-speedometer2" style="font-size: 2rem; color: var(--emerald);"></i>
+                                    <h3 class="mt-2">{{ profile.bmi|default:"-" }}</h3>
+                                    <small class="text-muted">BMI</small>
+                                    <div class="mt-2">
+                                        {% if profile.bmi < 18.5 %}
+                                            <span class="badge bg-warning">Underweight</span>
+                                        {% elif profile.bmi < 25 %}
+                                            <span class="badge bg-success">Normal</span>
+                                        {% elif profile.bmi < 30 %}
+                                            <span class="badge bg-warning">Overweight</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Obese</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card stat-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-fire text-danger" style="font-size: 2rem;"></i>
+                                    <h3 class="mt-2">{{ profile.bmr|default:"-" }}</h3>
+                                    <small class="text-muted">BMR (kcal)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card stat-card h-100">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-lightning text-warning" style="font-size: 2rem;"></i>
+                                    <h3 class="mt-2">{{ profile.tdee|default:"-" }}</h3>
+                                    <small class="text-muted">TDEE (kcal)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Today's Targets -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-bullseye text-success"></i> Today's Targets</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <h4>{{ profile.target_calories|default:"0"|floatformat:0 }}</h4>
+                                    <small class="text-muted">Calories</small>
+                                </div>
+                                <div class="col-3">
+                                    <h4>{{ profile.target_protein|default:"0"|floatformat:1 }}g</h4>
+                                    <small class="text-muted">Protein</small>
+                                </div>
+                                <div class="col-3">
+                                    <h4>{{ profile.target_carbs|default:"0"|floatformat:1 }}g</h4>
+                                    <small class="text-muted">Carbs</small>
+                                </div>
+                                <div class="col-3">
+                                    <h4>{{ profile.target_fat|default:"0"|floatformat:1 }}g</h4>
+                                    <small class="text-muted">Fat</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dynamic Advice -->
+                    {% if advice_list %}
+                    <div class="card mt-3" style="border-color: var(--emerald);">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-lightbulb text-warning"></i> Nutrition Advice</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0 list-unstyled">
+                                {% for advice in advice_list %}
+                                <li class="mb-2 p-2" style="background: var(--bg-surface-alt); border: 1px solid var(--border-color); border-radius: 8px;">{{ advice }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Weight Card -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-graph-down text-info"></i> Current Weight: {{ profile.weight|default:"-" }}kg</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-0">
+                                <div class="col-lg-8 col-md-7">
+                                    {% if weight_history %}
+                                        <div style="position: relative; height: 250px; width: 100%;">
+                                            <canvas id="weightChart"></canvas>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted text-center py-4">No weight history yet</p>
+                                    {% endif %}
+                                    <form method="post" class="mt-3">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="add_weight">
+                                        <div class="input-group">
+                                            <input type="number" name="new_weight" class="form-control" placeholder="New weight (kg)" step="0.1" required>
+                                            <input type="text" name="note" class="form-control" placeholder="Note (optional)">
+                                            <button type="submit" class="btn btn-emerald">Record</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                {% if weight_history %}
+                                <div class="col-lg-4 col-md-5 ps-3" style="border-left: 1px solid var(--border-color);">
+                                    <small class="text-muted mb-2 d-block"><i class="bi bi-clock-history"></i> Recent entries</small>
+                                    <div style="max-height: 280px; overflow-y: auto;">
+                                        {% for record in weight_history %}
+                                        {% if forloop.counter0 < 10 %}
+                                        <div class="d-flex justify-content-between align-items-center py-1 px-2 mb-1" style="background: var(--bg-surface-alt); border-radius: 6px;">
+                                            <span style="color: var(--text-primary);">{{ record.weight }}kg <small class="text-muted">{{ record.recorded_at|date:"d M H:i" }}{% if record.note %}: {{ record.note }}{% endif %}</small></span>
+                                            <form method="post" action="{% url 'delete-weight' record.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="Delete entry">&times;</button>
+                                            </form>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <h5>Setup Your Health Profile</h5>
+                        <p>Complete your profile to see BMI, BMR, TDEE and personalized targets.</p>
+                        <button class="btn btn-emerald" onclick="showPlanTab()">Go to Plan Update</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- PLAN UPDATE TAB -->
+        <div class="tab-pane fade" id="plan">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-sliders text-primary"></i> Update Your Plan</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="planForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_profile">
+                        
+                        <h5 class="mb-3">Profile Photo & Bio</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Avatar</label>
+                                <input type="file" name="profile_photo" class="form-control" accept="image/*">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Bio</label>
+                                <textarea name="bio" class="form-control" rows="2" placeholder="About you...">{{ profile.bio|default:"" }}</textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Social Link</label>
+                                <input type="url" name="social_link" class="form-control" placeholder="https://..." value="{{ profile.social_link|default:"" }}">
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3">Body Measurements</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Height (cm)</label>
+                                <input type="number" name="height" class="form-control" value="{{ profile.height|default:"" }}" step="0.1" min="100" max="250">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" name="weight" class="form-control" value="{{ profile.weight|default:"" }}" step="0.1" min="30" max="300">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Age</label>
+                                <input type="number" name="age" class="form-control" value="{{ profile.age|default:"" }}" min="10" max="100">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Gender</label>
+                                <select name="gender" class="form-select">
+                                    <option value="MALE" {% if profile.gender == 'MALE' %}selected{% endif %}>Male</option>
+                                    <option value="FEMALE" {% if profile.gender == 'FEMALE' %}selected{% endif %}>Female</option>
+                                    <option value="OTHER" {% if profile.gender == 'OTHER' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3">Activity & Goal</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Activity Level</label>
+                                <select name="activity_level" class="form-select">
+                                    {% for key, val in activity_levels.items %}
+                                        <option value="{{ key }}" {% if profile.activity_level == key %}selected{% endif %}>{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fitness Goal</label>
+                                <select name="goal" class="form-select">
+                                    {% for key, val in goals.items %}
+                                        <option value="{{ key }}" {% if profile.goal == key %}selected{% endif %}>{{ val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3">Water Target</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Daily Water (glasses)</label>
+                                <input type="number" name="water_target" class="form-control" value="{{ profile.water_target|default:8 }}" min="1" max="20">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-emerald btn-lg w-100">
+                            <i class="bi bi-check-circle"></i> Save & Recalculate
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- HISTORY TAB -->
+        <div class="tab-pane fade" id="history">
+            <!-- --- MIGRATING PROGRESS UI --- -->
+            <!-- moving the old progress screen right into the profile history tab rn -->
+            
+            <!-- Daily Data -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Last 7 Days</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Meals</th>
+                                    <th>Calories</th>
+                                    <th>Protein</th>
+                                    <th>Carbs</th>
+                                    <th>Fat</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for day in daily_data %}
+                                <tr class="{% if day.status == 'good' %}table-success{% elif day.status == 'low' %}table-warning{% elif day.status == 'over' %}table-danger{% endif %}">
+                                    <td>{{ day.display_date }}</td>
+                                    <td>{{ day.meal_count }}</td>
+                                    <td>{{ day.total_calories|floatformat:0 }}</td>
+                                    <td>{{ day.total_protein|floatformat:0 }}g</td>
+                                    <td>{{ day.total_carbs|floatformat:0 }}g</td>
+                                    <td>{{ day.total_fat|floatformat:0 }}g</td>
+                                    <td>
+                                        {% if day.status == 'good' %}
+                                            <span class="badge bg-success">On Track</span>
+                                        {% elif day.status == 'low' %}
+                                            <span class="badge bg-warning">Low</span>
+                                        {% elif day.status == 'over' %}
+                                            <span class="badge bg-danger">Over</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Weekly Data -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Weekly Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ weekly_summary.total_calories|floatformat:0 }}</h3>
+                                    <small class="text-muted">Total Calories</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ weekly_summary.total_protein|floatformat:0 }}g</h3>
+                                    <small class="text-muted">Total Protein</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ weekly_summary.total_carbs|floatformat:0 }}g</h3>
+                                    <small class="text-muted">Total Carbs</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ weekly_summary.total_fat|floatformat:0 }}g</h3>
+                                    <small class="text-muted">Total Fat</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>{{ weekly_summary.days_tracked }}</strong> days tracked this week
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Monthly Data -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Monthly Summary (30 days)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ monthly_summary.total_calories|floatformat:0 }}</h3>
+                                    <small class="text-muted">Total Calories</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ monthly_summary.total_protein|floatformat:0 }}g</h3>
+                                    <small class="text-muted">Total Protein</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ monthly_summary.total_carbs|floatformat:0 }}g</h3>
+                                    <small class="text-muted">Total Carbs</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h3>{{ monthly_summary.total_fat|floatformat:0 }}g</h3>
+                                    <small class="text-muted">Total Fat</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>{{ monthly_summary.days_tracked }}</strong> days tracked this month
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ACCOUNT SETTINGS TAB -->
+        <div class="tab-pane fade" id="settings">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-envelope text-primary"></i> Update Email</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_email">
+                                <div class="mb-3">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+                                </div>
+                                <button type="submit" class="btn btn-emerald">Update Email</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-key text-warning"></i> Change Password</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_password">
+                                <div class="mb-3">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" name="new_password" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" name="confirm_password" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-warning">Change Password</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_account">
+                                <div class="alert alert-danger">
+                                    <strong>Warning:</strong> This action cannot be undone. All your data will be permanently deleted.
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Type username to confirm: <strong>{{ user.username }}</strong></label>
+                                    <input type="text" name="confirm_delete" class="form-control" required>
+                                </div>
+                                <button type="submit" class="btn btn-danger">Delete Account Permanently</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function addWater() {
+    fetch('/add-water/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('waterCount').textContent = data.water_consumed;
+            document.getElementById('waterTarget').textContent = data.water_target;
+            document.getElementById('waterProgress').textContent = data.progress + '%';
+            const glassCount = data.water_target;
+            const consumed = data.water_consumed;
+            let html = '';
+            for (let i = 1; i <= glassCount; i++) {
+                html += i <= consumed
+                    ? '<div class="water-glass" style="background:linear-gradient(to top,#17a2b8 100%,transparent 100%);"></div>'
+                    : '<div class="water-glass empty"></div>';
+            }
+            document.getElementById('waterGlasses').innerHTML = html;
+        }
+    })
+    .catch(() => location.reload());
+}
+
+function showPlanTab() {
+    document.querySelector('.nav-tabs button[data-bs-target="#plan"]').click();
+}
+
+// Weight Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const chartElement = document.getElementById('weightChart');
+    if (!chartElement) return;
+
+    const dateLabels = [
+        {% for record in weight_history %}
+            "{{ record.recorded_at|date:'d M Y' }}"{% if not forloop.last %}, {% endif %}
+        {% empty %}
+            "No Records"
+        {% endfor %}
+    ].reverse();
+
+    const weightData = [
+        {% for record in weight_history %}
+            {{ record.weight|stringformat:"f" }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+            0
+        {% endfor %}
+    ].reverse();
+
+    if (weightData.length === 0 || (weightData.length === 1 && weightData[0] === 0)) {
+        chartElement.parentNode.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-graph-up mb-2 d-block" style="font-size: 2rem;"></i>Log your weight across multiple days to generate the trend grid!</div>';
+        return;
+    }
+
+    new Chart(chartElement, {
+        type: 'line',
+        data: {
+            labels: dateLabels,
+            datasets: [{
+                label: 'Weight Progress (kg)',
+                data: weightData,
+                borderColor: '#1b9c5e',
+                backgroundColor: 'rgba(27, 156, 94, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#1b9c5e',
+                pointBorderColor: '#ffffff',
+                tension: 0.2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: '#2a2f3b' }, ticks: { color: '#a0a8b8' } },
+                x: { grid: { display: false }, ticks: { color: '#a0a8b8' } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

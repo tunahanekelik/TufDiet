@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}TufDiet{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* ===== THEME VARIABLES ===== */
+      :root {
+        --bg-body: #0f1218;
+        --bg-surface: #1a1f2b;
+        --bg-surface-alt: #232836;
+        --bg-elevated: #2a2f3b;
+        --border-color: #2a2f3b;
+        --text-primary: #e8e8e8;
+        --text-secondary: #c8ccd4;
+        --text-muted: #6c757d;
+        --emerald: #1b9c5e;
+        --emerald-dark: #147a4a;
+        --emerald-glow: rgba(27, 156, 94, 0.3);
+        --navbar-bg: #0d1f17;
+        --navbar-text: #ffffff;
+        --navbar-hover: #2ecc71;
+        --footer-bg: #0d1f17;
+      }
+      [data-theme="charcoal"] {
+        --bg-body: #121212;
+        --bg-surface: #1a1a1a;
+        --bg-surface-alt: #222222;
+        --bg-elevated: #2a2a2a;
+        --border-color: #2a2a2a;
+        --text-primary: #e0e0e0;
+        --text-secondary: #b0b0b0;
+        --text-muted: #606060;
+        --emerald: #00e676;
+        --emerald-dark: #00c853;
+        --emerald-glow: rgba(0, 230, 118, 0.3);
+        --navbar-bg: #0a0a0a;
+        --navbar-text: #ffffff;
+        --navbar-hover: #00e676;
+        --footer-bg: #0a0a0a;
+      }
+      [data-theme="cyberpunk"] {
+        --bg-body: #0a0f1d;
+        --bg-surface: #0f1628;
+        --bg-surface-alt: #161e35;
+        --bg-elevated: #1c2645;
+        --border-color: #1c2645;
+        --text-primary: #d0e0ff;
+        --text-secondary: #90b0f0;
+        --text-muted: #506090;
+        --emerald: #00ffcc;
+        --emerald-dark: #00cc99;
+        --emerald-glow: rgba(0, 255, 204, 0.3);
+        --navbar-bg: #060a14;
+        --navbar-text: #00ffcc;
+        --navbar-hover: #80ffe8;
+        --footer-bg: #060a14;
+      }
+      [data-theme="emerald-light"] {
+        --bg-body: #f8f9fa;
+        --bg-surface: #ffffff;
+        --bg-surface-alt: #f1f3f5;
+        --bg-elevated: #e9ecef;
+        --border-color: #dee2e6;
+        --text-primary: #1a1f2b;
+        --text-secondary: #343a40;
+        --text-muted: #6c757d;
+        --emerald: #1b9c5e;
+        --emerald-dark: #147a4a;
+        --emerald-glow: rgba(27, 156, 94, 0.25);
+        --navbar-bg: #1b9c5e;
+        --navbar-text: #ffffff;
+        --navbar-hover: #d4edda;
+        --footer-bg: #1b9c5e;
+      }
+
+      /* ===== GLOBAL ===== */
+      body {
+        background: var(--bg-body);
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        transition: background 0.3s, color 0.3s;
+      }
+      h1, h2, h3 { font-weight: 700; }
+      h1 { font-size: calc(1.75rem * 1.15); }
+      h2 { font-size: calc(1.5rem * 1.15); }
+      h3 { font-size: calc(1.25rem * 1.15); }
+      .main-content {
+        min-height: 60vh;
+        width: 100%;
+      }
+      .main-content > .container,
+      .main-content > .container-fluid {
+        width: 100%;
+      }
+      a { color: var(--emerald); }
+      a:hover { color: var(--emerald-dark); }
+
+      /* ===== NAVBAR ===== */
+      .navbar-tufdiet {
+        background: var(--navbar-bg) !important;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+        padding: 0.6rem 0;
+      }
+      .navbar-tufdiet .navbar-brand {
+        font-weight: 800;
+        font-size: 1.6rem;
+        color: var(--navbar-text) !important;
+        text-shadow: 0 0 12px var(--emerald-glow);
+        letter-spacing: -0.5px;
+      }
+      .navbar-tufdiet .navbar-brand i {
+        color: var(--navbar-text);
+        margin-right: 4px;
+        font-size: 1.7rem;
+      }
+      .navbar-tufdiet .navbar-nav .nav-link {
+        color: var(--navbar-text) !important;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      }
+      .navbar-tufdiet .navbar-nav .nav-link:hover,
+      .navbar-tufdiet .navbar-nav .nav-link:focus {
+        color: var(--navbar-hover) !important;
+        background: rgba(255,255,255,0.06);
+      }
+      .navbar-tufdiet .navbar-nav .nav-link i {
+        margin-right: 4px;
+      }
+      .navbar-tufdiet .navbar-toggler {
+        border-color: rgba(255,255,255,0.2);
+      }
+      .navbar-tufdiet .navbar-toggler-icon {
+        filter: brightness(2);
+      }
+
+      /* ===== OFFCanvas ===== */
+      .offcanvas-tufdiet {
+        background: var(--bg-surface) !important;
+        color: var(--text-primary);
+      }
+      .offcanvas-tufdiet .offcanvas-header {
+        background: var(--navbar-bg);
+        border-bottom: 1px solid var(--border-color);
+      }
+      .offcanvas-tufdiet .offcanvas-header .btn-close {
+        filter: invert(1);
+      }
+      .offcanvas-tufdiet .form-label {
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+      .offcanvas-tufdiet .form-control,
+      .offcanvas-tufdiet .form-select {
+        background: var(--bg-surface-alt);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+        border-radius: 8px;
+      }
+      .offcanvas-tufdiet .form-control:focus,
+      .offcanvas-tufdiet .form-select:focus {
+        border-color: var(--emerald);
+        box-shadow: 0 0 0 0.2rem var(--emerald-glow);
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+      }
+      .offcanvas-tufdiet .divider {
+        border-top: 1px solid var(--border-color);
+        margin: 1.25rem 0;
+      }
+
+      /* ===== THEME SELECTOR ===== */
+      .theme-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+        background: var(--bg-surface-alt);
+        border: 1px solid var(--border-color);
+        margin-bottom: 6px;
+      }
+      .theme-option:hover {
+        background: var(--bg-elevated);
+      }
+      .theme-option.active {
+        border-color: var(--emerald);
+        box-shadow: 0 0 0 1px var(--emerald);
+      }
+      .theme-swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 2px solid var(--border-color);
+      }
+      .theme-option.active .theme-swatch {
+        border-color: var(--emerald);
+      }
+
+      /* ===== COMMON COMPONENTS ===== */
+      .hero-section {
+        background: linear-gradient(135deg, var(--emerald) 0%, var(--emerald-dark) 100%);
+        color: white;
+        padding: 80px 0;
+      }
+      .btn-emerald {
+        background: var(--emerald);
+        border-color: var(--emerald);
+        color: #fff;
+      }
+      .btn-emerald:hover {
+        background: var(--emerald-dark);
+        color: #fff;
+      }
+      .card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      }
+      .card-header {
+        background: var(--bg-surface-alt) !important;
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        color: var(--text-primary) !important;
+      }
+      .card-body { color: var(--text-secondary); }
+      .form-control, .form-select {
+        background: var(--bg-surface-alt);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        border-radius: 8px;
+      }
+      .form-control:focus, .form-select:focus {
+        border-color: var(--emerald);
+        box-shadow: 0 0 0 0.2rem var(--emerald-glow);
+        background: var(--bg-elevated);
+        color: var(--text-primary);
+      }
+      .badge { font-weight: 500; }
+      .text-muted { color: var(--text-muted) !important; }
+
+      /* ===== CHAT WIDGET GLOBAL ===== */
+      .user-bubble-global {
+        background: var(--emerald);
+        color: #fff;
+        max-width: 85%;
+        margin-left: auto;
+        border-radius: 16px 16px 4px 16px;
+        padding: 10px 16px;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+      .ai-bubble-global {
+        background: var(--bg-surface-alt);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        max-width: 85%;
+        margin-right: auto;
+        border-radius: 16px 16px 16px 4px;
+        padding: 10px 16px;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .ai-bubble-global ul, .ai-bubble-global ol { padding-left: 18px; margin-bottom: 6px; }
+      .ai-bubble-global li { margin-bottom: 4px; }
+      .ai-bubble-global strong { color: #fff; }
+      .ai-bubble-global p { margin-bottom: 6px; }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <!-- ===== TOP NAVBAR ===== -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-tufdiet">
+      <div class="container">
+        <a class="navbar-brand" href="/">
+          <i class="bi bi-egg-fried"></i> TufDiet
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <div class="navbar-nav ms-auto align-items-lg-center">
+            <a class="nav-item nav-link" href="/"><i class="bi bi-house"></i>Home</a>
+            <a class="nav-item nav-link" href="/dashboard/"><i class="bi bi-grid"></i>Dashboard</a>
+            {% if user.is_authenticated %}
+            <a class="nav-item nav-link" href="/add-meal/"><i class="bi bi-plus-circle"></i>Add Meal</a>
+            <!-- --- FIXING THE NAVIGATION --- -->
+            <!-- swapping out progress for diet-plan in the navbar rn -->
+            <a class="nav-item nav-link" href="{% url 'diet-plan' %}"><i class="bi bi-calendar-check"></i>Diet Plan</a>
+            <a class="nav-item nav-link" href="/ai/chat-hub/"><i class="bi bi-robot"></i>AI Dietitian</a>
+            <a class="nav-item nav-link" href="/profile/"><i class="bi bi-person"></i>Profile</a>
+            <button class="nav-item nav-link btn btn-link border-0" data-bs-toggle="offcanvas" data-bs-target="#settingsDrawer">
+              <i class="bi bi-gear"></i>Settings
+            </button>
+            <a class="nav-item nav-link" href="/logout/"><i class="bi bi-box-arrow-right"></i>Logout</a>
+            {% else %}
+            <a class="nav-item nav-link" href="/login/"><i class="bi bi-key"></i>Login</a>
+            <a class="nav-item nav-link" href="/register/"><i class="bi bi-person-plus"></i>Register</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== SETTINGS OFF CANVAS DRAWER ===== -->
+    <div class="offcanvas offcanvas-end offcanvas-tufdiet" tabindex="-1" id="settingsDrawer" aria-labelledby="settingsDrawerLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title text-white" id="settingsDrawerLabel">
+          <i class="bi bi-gear"></i> Settings
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+      </div>
+      <div class="offcanvas-body">
+        {% if user.is_authenticated %}
+          <!-- Quick User Overview -->
+          <div class="text-center mb-4">
+            {% if user.tuf_profile.avatar %}
+              <img src="{{ user.tuf_profile.avatar.url }}" class="rounded-circle" style="width:70px;height:70px;object-fit:cover;border:2px solid var(--emerald);">
+            {% elif user.tuf_profile.profile_photo %}
+              <img src="{{ user.tuf_profile.profile_photo.url }}" class="rounded-circle" style="width:70px;height:70px;object-fit:cover;border:2px solid var(--emerald);">
+            {% else %}
+              <div style="width:70px;height:70px;border-radius:50%;background:var(--bg-elevated);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:2rem;border:2px solid var(--emerald);">
+                <i class="bi bi-person" style="color:var(--emerald);"></i>
+              </div>
+            {% endif %}
+            <h5 style="color:var(--text-primary);">{{ user.username }}</h5>
+            <small class="text-muted">{{ user.email }}</small>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Interface Theme Selector -->
+          <h6 style="color:var(--text-primary);"><i class="bi bi-palette"></i> Interface Theme</h6>
+          <div class="mb-3">
+            <div class="theme-option active" data-theme-val="emerald" onclick="setTheme('emerald')">
+              <span class="theme-swatch" style="background:linear-gradient(135deg,#0f1218,#1b9c5e);"></span>
+              <div><strong>Emerald Dark</strong><br><small class="text-muted">Deep space with emerald accents</small></div>
+            </div>
+            <div class="theme-option" data-theme-val="charcoal" onclick="setTheme('charcoal')">
+              <span class="theme-swatch" style="background:linear-gradient(135deg,#121212,#00e676);"></span>
+              <div><strong>Deep Charcoal</strong><br><small class="text-muted">Matte black with neon green</small></div>
+            </div>
+            <div class="theme-option" data-theme-val="cyberpunk" onclick="setTheme('cyberpunk')">
+              <span class="theme-swatch" style="background:linear-gradient(135deg,#0a0f1d,#00ffcc);"></span>
+              <div><strong>Cyberpunk Mint</strong><br><small class="text-muted">Cybernetic with high-contrast mint</small></div>
+            </div>
+            <div class="theme-option" data-theme-val="emerald-light" onclick="setTheme('emerald-light')">
+              <span class="theme-swatch" style="background:linear-gradient(135deg,#f8f9fa,#1b9c5e);"></span>
+              <div><strong>Emerald Light</strong><br><small class="text-muted">Clean light mode with vibrant emerald accents</small></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Update Account Details -->
+          <h6 style="color:var(--text-primary);"><i class="bi bi-envelope"></i> Account Details</h6>
+          <form method="post" action="/profile/" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_email">
+            <div class="mb-2">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+            </div>
+            <button type="submit" class="btn btn-emerald btn-sm w-100">Update Email</button>
+          </form>
+
+          <div class="divider"></div>
+
+          <!-- Dangerous Actions -->
+          <h6 style="color:#ff6b6b;"><i class="bi bi-exclamation-triangle"></i> Dangerous Actions</h6>
+
+          <form method="post" action="/profile/" class="mb-2">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_password">
+            <div class="mb-2">
+              <label class="form-label">New Password</label>
+              <input type="password" name="new_password" class="form-control" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" name="confirm_password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-warning btn-sm w-100">Change Password</button>
+          </form>
+
+          <form method="post" action="/profile/" class="mt-3 p-3 rounded" style="background:var(--bg-surface-alt);border:1px solid rgba(255,107,107,0.3);">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_account">
+            <p class="small mb-2" style="color:#ff6b6b;">Permanently delete your account and all data.</p>
+            <div class="mb-2">
+              <label class="form-label">Type username <strong>{{ user.username }}</strong> to confirm</label>
+              <input type="text" name="confirm_delete" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-danger btn-sm w-100">Delete Account</button>
+          </form>
+        {% else %}
+          <div class="text-center mt-4">
+            <i class="bi bi-lock" style="font-size:3rem;color:var(--text-muted);"></i>
+            <p class="mt-3 text-muted">Login to access settings.</p>
+            <a href="/login/" class="btn btn-emerald">Login</a>
+            <a href="/register/" class="btn btn-outline-light ms-2">Register</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main-content">
+      {% block content %}{% endblock %}
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer style="background:var(--footer-bg);color:var(--text-muted);text-align:center;padding:1.5rem 0;margin-top:3rem;">
+      <div class="container">
+        <p class="mb-0" style="color:var(--text-secondary);">TufDiet &mdash; AI-Powered Nutrition Tracking</p>
+        <small>Built for CEN306 / FEE306 Course Project</small>
+      </div>
+    </footer>
+
+    <!-- ===== GLOBAL CHAT WIDGET ===== -->
+    {% if user.is_authenticated %}
+    <div id="chatWidget" style="position:fixed;bottom:20px;right:20px;z-index:9999;">
+      <button
+        id="chatToggle"
+        onclick="toggleChat()"
+        class="btn btn-emerald rounded-circle shadow"
+        style="width:60px;height:60px;display:flex;align-items:center;justify-content:center;"
+      >
+        <i class="bi bi-chat-dots" style="font-size:1.5rem;"></i>
+      </button>
+      <div
+        id="chatBox"
+        style="display:none;width:440px;height:600px;background:var(--bg-surface);border:1px solid var(--border-color);border-radius:12px;position:absolute;bottom:70px;right:0;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.5);"
+      >
+        <div style="padding:15px;background:linear-gradient(135deg,var(--emerald),var(--emerald-dark));display:flex;justify-content:space-between;align-items:center;">
+          <h6 class="mb-0 text-white"><i class="bi bi-robot"></i> TufDiet AI Dietitian</h6>
+          <button type="button" onclick="toggleChat()" class="btn-close btn-close-white" aria-label="Close"></button>
+        </div>
+        <div id="chatMessages" style="height:450px;overflow-y:auto;padding:15px;">
+          <div class="ai-bubble-global">
+            👋 Hello! I'm TufDiet AI Dietitian. Ask me about nutrition, meal plans, or health advice.
+          </div>
+        </div>
+        <div style="padding:10px 15px;border-top:1px solid var(--border-color);display:flex;">
+          <input id="chatInput" type="text" class="form-control me-2" placeholder="Ask me anything..." style="border-radius:20px;" />
+          <button onclick="sendChat()" class="btn btn-emerald rounded-circle" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      /* ===== THEME CONTROLLER ===== */
+      function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('tufdiet-theme', theme);
+        document.querySelectorAll('.theme-option').forEach(function(el) {
+          el.classList.toggle('active', el.getAttribute('data-theme-val') === theme);
+        });
+      }
+
+      (function restoreTheme() {
+        var saved = localStorage.getItem('tufdiet-theme') || 'emerald';
+        document.documentElement.setAttribute('data-theme', saved);
+        document.querySelectorAll('.theme-option').forEach(function(el) {
+          el.classList.toggle('active', el.getAttribute('data-theme-val') === saved);
+        });
+      })();
+
+      /* ===== CHAT WIDGET ===== */
+      function toggleChat() {
+        var box = document.getElementById('chatBox');
+        if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      }
+
+      function sendChat() {
+        var input = document.getElementById('chatInput');
+        var msg = input.value.trim();
+        if (!msg) return;
+        input.value = '';
+
+        var container = document.getElementById('chatMessages');
+        container.innerHTML +=
+          '<div class="user-bubble-global">' + msg + '</div>';
+        container.innerHTML +=
+          '<div class="ai-bubble-global"><em style="color:var(--text-muted);">Typing...</em></div>';
+        container.scrollTop = container.scrollHeight;
+
+        fetch('/ai/chat-response/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: msg }),
+        })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            container.removeChild(container.lastChild);
+            var response = data.response || 'Sorry, I could not process your request.';
+            var html = (typeof marked !== 'undefined') ? marked.parse(response) : response.replace(/\n/g, '<br>');
+            container.innerHTML +=
+              '<div class="ai-bubble-global">' + html + '</div>';
+            container.scrollTop = container.scrollHeight;
+          })
+          .catch(function() {
+            container.removeChild(container.lastChild);
+            container.innerHTML +=
+              '<div class="ai-bubble-global">Service unavailable. Try again later.</div>';
+          });
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        var chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+          chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendChat();
+          });
+        }
+      });
+    </script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
